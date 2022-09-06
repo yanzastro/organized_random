@@ -12,6 +12,16 @@ mpl.rcParams['figure.dpi'] = 200
 
 def calculate_or_weights(Ns, testing_radec, testing_som_ind):
 
+    '''
+    This function calculates the organized random weight on the pixelized sky.
+    Input:
+    Ns: an integer specifying the Nside of the weight map.
+    testing_radec: the RA and Dec of the testing data;
+    testing_som_ind: the 1-D index of the flattend SOM corresponding to each data vector in the testing data.
+    Output:
+    weight_map: a healpix map of the organized random weight
+    '''
+    
     hp_ind = hp.ang2pix(Ns, testing_radec.T[0], testing_radec.T[1], lonlat=True)
 
     hp_ind_unique, n_p = np.unique(hp_ind, return_counts=True)  # this line gives the unique healpix pixel indices that contains at least one galaxy, as well as the number of galaxies in each pixel 

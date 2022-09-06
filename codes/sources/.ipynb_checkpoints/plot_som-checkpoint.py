@@ -12,11 +12,27 @@ from matplotlib import cm, colorbar
 mpl.rcParams['figure.dpi'] = 200
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+
 def plot_som(ax, som_heatmap, topology='rectangular', colormap=cm.viridis, cbar_name=None):
+    '''
+    This function plots the pre-trained SOM.
+    Input:
+    ax: the axis to be plotted on.
+    som_heatmap: a 2-D array contains the value in a pre-trained SOM. The value can be the number 
+    of sources in each cell; or the mean feature in every cell.  
+    topology: string, either 'rectangular' or 'hexagonal'.
+    colormap: the colormap to show the values. default: cm.viridis.
+    cbar_name: the label on the color bar.
+    '''
     if topology == 'rectangular':
-        ax.matshow(som_heatmap.T, cmap=colormap)
+        ax.matshow(som_heatmap.T, cmap=colormap, 
+                   vmin=np.quantile(som_heatmap[~np.isnan(som_heatmap)],0.01), 
+                   vmax=np.quantile(som_heatmap[~np.isnan(som_heatmap)], 0.99))
     else:
-        cscale = som_heatmap / som_heatmap[~np.isnan(som_heatmap)].max()
+        smap_low = np.quantile(som_heatmap[~np.isnan(som_heatmap)],0.01)
+        smap_high = np.quantile(som_heatmap[~np.isnan(som_heatmap)],0.99)
+        
+        cscale = (som_heatmap-smap_low) / (smap_high-smap_low)
         som_dim = cscale.shape[0]
         yy, xx= np.meshgrid(np.arange(som_dim), np.arange(som_dim))
         shift = np.zeros(som_dim)
@@ -39,8 +55,8 @@ def plot_som(ax, som_heatmap, topology='rectangular', colormap=cm.viridis, cbar_
                                  lw=0,)
                 ax.add_patch(hex)
 
-        scmap = plt.scatter([0,0],[0,0], s=0, c=[som_heatmap[~np.isnan(som_heatmap)].min(),
-                                                 som_heatmap[~np.isnan(som_heatmap)].max()], 
+        scmap = plt.scatter([0,0],[0,0], s=0, c=[smap_low,
+                                                 smap_high], 
                             cmap=colormap)
         ax.set_xlim(-1,som_dim-.5)
         ax.set_ylim(-0.5,som_dim * np.sqrt(3) / 2)
@@ -48,4 +64,7 @@ def plot_som(ax, som_heatmap, topology='rectangular', colormap=cm.viridis, cbar_
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         
-        plt.colorbar(scmap, cax=cax, label=cbar_name)
+        cb = plt.colorbar(scmap, cax=cax)
+        cb.ax.tick_params(labelsize=5)
+        cb.set_label(cbar_name, size='xx-small') 
+        ax.axis('off')
